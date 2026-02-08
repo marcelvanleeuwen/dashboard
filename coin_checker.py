@@ -316,7 +316,14 @@ HTML = """
       if (data.error) throw new Error(data.error);
 
       document.getElementById('title').textContent = `${displayName(currentCoin)} ${t('titleSuffix')}`;
-      document.getElementById('price').innerHTML = `€ ${formatPrice(data.eur)} <span class="muted">/ $ ${formatPrice(data.usd)}</span>`;
+
+      const primaryIsUsd = currentCurrency === 'usd';
+      const primarySymbol = primaryIsUsd ? '$' : '€';
+      const secondarySymbol = primaryIsUsd ? '€' : '$';
+      const primaryValue = primaryIsUsd ? data.usd : data.eur;
+      const secondaryValue = primaryIsUsd ? data.eur : data.usd;
+
+      document.getElementById('price').innerHTML = `${primarySymbol} ${formatPrice(primaryValue)} <span class="muted">/ ${secondarySymbol} ${formatPrice(secondaryValue)}</span>`;
       setChange(data.change_24h);
       document.getElementById('updated').textContent = data.updated;
 
@@ -409,7 +416,7 @@ HTML = """
     async function onCurrencyChange() {
       currentCurrency = document.getElementById('currency').value;
       localStorage.setItem('chartCurrency', currentCurrency);
-      await loadChart();
+      await Promise.all([loadPrice(), loadChart()]);
     }
 
     async function onLangChange() {
